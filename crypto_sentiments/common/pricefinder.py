@@ -16,7 +16,7 @@ COINS = set(['BTC', 'ETH', 'LTC'])
 CURRENCIES = set(['USD'])
 
 
-def get_price(coin, currency, date=None):
+def get_price(coin = 'BTC', currency = 'USD', date=None):
     """
     Get price of cryptocurrency in terms of real currency on a specific day
 
