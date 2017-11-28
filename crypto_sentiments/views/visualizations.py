@@ -13,4 +13,4 @@ visualizations = Blueprint(
 
 @visualizations.route('/')
 def index():
-    return "Visualizations" 
+    return render_template('visualizations.html')

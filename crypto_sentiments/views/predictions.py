@@ -13,4 +13,4 @@ predictions = Blueprint(
 
 @predictions.route('/')
 def index():
-    return "Predictions" 
+    return render_template('predictions.html')

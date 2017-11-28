@@ -13,4 +13,4 @@ home = Blueprint(
 
 @home.route('/')
 def index():
-    return "Home" 
+    return render_template('index.html')
