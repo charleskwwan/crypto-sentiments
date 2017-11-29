@@ -14,16 +14,41 @@
   <script>if(typeof($.fn.modal) === 'undefined') {document.write('<script src="/static/js/bootstrap.min.js"><\/script>')}</script>
 
   <!-- Our CSS -->
-  <link rel="stylesheet" href="/static/css/common.css"
+  <link rel="stylesheet" href="/static/css/common.css">
+  <link rel="stylesheet" href="/static/css/predictions.css">
   <!-- Our JS -->
   <script src="/static/js/common.js"></script>
+  <script src="/static/js/predictions.js"></script>
 
   <title>CryptoSentiments - Predictions</title>
 </head>
 
 <body>
   <header class="header"></header>
-  <main role="main"></main>
+  <main role="main">
+    <div class="container">
+      <div class="page-title"><h1 class="display-4">Prediction</h1></div>
+      <div class="page-description text-primary">
+        <p class="text-primary">Input your tweet below. We will perform sentiment analysis on it and predict how it will affect certain cryptocurrencies.</p>
+      </div>
+
+      <div class="row" id="prediction-form">
+        <div class="form-group col-lg-6">
+          <label class="text-primary"><h4>Your Tweet</h4></label>
+          <textarea class="form-control" id="tweet-input" rows="5"></textarea>
+          <button type="button" class="btn btn-danger" id="analyze-btn">Analyze</button>
+          <button type="button" class="btn btn-primary" id="clear-btn">Clear</button>
+        </div>
+
+        <div class="col-lg-6">
+          <label class="text-primary"><h4>The Results</h4></label>
+          <div id="results-div">
+            <p>Input a tweet into the textbox on the left and click "Analyze"!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
   <footer class="footer"></footer>
 </body>
 

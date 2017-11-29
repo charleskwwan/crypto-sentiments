@@ -13,7 +13,7 @@ $(document).ready(function() {
         // navbar covers next element a bit, so add padding
         $("body main").css(
             "padding-top",
-            String(($("header .navbar").height() + $("header .navbar").innerHeight())/2) + "px"
+            String($("header .navbar").outerHeight()) + "px"
         );
     });
 
@@ -25,7 +25,7 @@ $(document).ready(function() {
         // similarly, footer covers next element so add bottom padding
         $("body main").css(
             "padding-bottom",
-            String($("footer .navbar").innerHeight()) + "px"
+            String($("footer .navbar").outerHeight()) + "px"
         )
     });
 });

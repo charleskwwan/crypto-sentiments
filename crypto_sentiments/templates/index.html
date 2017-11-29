@@ -16,17 +16,17 @@
   <!-- Our CSS -->
   <link rel="stylesheet" href="/static/css/common.css">
   <link rel="stylesheet" href="/static/css/index.css">
-  <!-- Our JS -->S
+  <!-- Our JS -->
   <script src="/static/js/common.js"></script>
-  <script src="/static/js/index.js"></script>s
+  <script src="/static/js/index.js"></script>
 
   <title>CryptoSentiments</title>
+
+  <!-- set in metadata for jquery to access jinja vars -->
+  <meta id="currencies-data" data-currencies="{{ currencies }}">
 </head>
 
 <body>
-  <!-- set in metadata for jquery to access jinja vars -->
-  <meta id="currencies-data" data-currencies="{{ currencies }}">
-
   <header class="header"></header>
   <main role="main">
     <div class="jumbotron">

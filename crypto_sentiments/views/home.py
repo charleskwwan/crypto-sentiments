@@ -1,5 +1,10 @@
 # crypto_sentiments/views/home.py
 
+import random # temp
+
+from crypto_sentiments.common.constants import CURRENCIES
+from crypto_sentiments.common.constants import DIRECTIONS # temp
+from crypto_sentiments.common.constants import SENTIMENTS # temp
 from flask import Blueprint
 from flask import jsonify
 from flask import render_template
@@ -13,26 +18,21 @@ home = Blueprint(
 )
 
 _DEFAULT_CURRENCY = 'bitcoin'
-_price_directions = {
-    'bitcoin': 'up',
-    'ethereum': 'down',
-    'litecoin': 'up',
-}
 
 
-@home.route('/')
+@home.route('/', methods=['GET'])
 def index():
     return render_template(
         'index.html',
         currency=_DEFAULT_CURRENCY,
-        direction=_price_directions[_DEFAULT_CURRENCY],
-        currencies=[c for c in _price_directions.keys()],
+        direction=random.sample(DIRECTIONS, 1)[0],
+        currencies=[c for c in CURRENCIES],
     )
 
 
 @home.route('/pricedir/<string:currency>', methods=['GET'])
 def pricedir(currency):
-    if currency in _price_directions:
-        return jsonify({'direction': _price_directions[currency]})
+    if currency in CURRENCIES:
+        return jsonify({'direction': random.sample(DIRECTIONS, 1)[0]})
     else:
         return jsonify({'error': 'Invalid currency'})
