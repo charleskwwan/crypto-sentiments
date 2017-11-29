@@ -14,16 +14,57 @@
   <script>if(typeof($.fn.modal) === 'undefined') {document.write('<script src="/static/js/bootstrap.min.js"><\/script>')}</script>
 
   <!-- Our CSS -->
-  <link rel="stylesheet" href="/static/css/common.css"
-  <!-- Our JS -->
+  <link rel="stylesheet" href="/static/css/common.css">
+  <link rel="stylesheet" href="/static/css/index.css">
+  <!-- Our JS -->S
   <script src="/static/js/common.js"></script>
+  <script src="/static/js/index.js"></script>s
 
   <title>CryptoSentiments</title>
 </head>
 
 <body>
+  <!-- set in metadata for jquery to access jinja vars -->
+  <meta id="currencies-data" data-currencies="{{ currencies }}">
+
   <header class="header"></header>
-  <div class="container" role="main"></div>
+  <main role="main">
+    <div class="jumbotron">
+      <div class="container">
+        <h1 class="display-6">We think <span id="currency-text">{{ currency }}</span> will go</h1>
+  
+        {% if direction == 'up' %}
+          <h1 class="display-1 predict-text" id="predict-up">UP ▴</h1>
+        {% elif direction == 'down' %}
+          <h1 class="display-1 predict-text" id="predict-down">DOWN ▾</h1>
+        {% endif %}
+
+        <div class="btn-group-wrap">
+          <div class="btn-group" id="currency-btns" data-toggle="buttons">
+            {% for c in currencies %}
+              {% if c == currency %}
+                <label class="btn btn-primary active">
+                  <input type="radio" name="currencies" id={{ c + '-btn' }} checked=""> {{ c.title() }}
+                </label>
+              {% else %}
+                <label class="btn btn-primary">
+                  <input type="radio" name="currencies" id={{ c + '-btn' }}> {{ c.title() }}
+                </label>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <p>How did we make this prediction? By doing sentiment analysis on tweets! Check us out on <a href="https://github.com/charleskwwan/crypto-sentiments"><img src="/static/img/GitHub_Logo.png" id="github-logo-inline"></a>! Otherwise, learn more about cryptocurrency sentiments on Twitter below.</p>
+
+        <p class="lead">
+          <a class="btn btn-outline-primary" href="/viz/" role="button">Learn more</a>
+        </p>
+      </div>
+    </div>
+  </main>
   <footer class="footer"></footer>
 </body>
 

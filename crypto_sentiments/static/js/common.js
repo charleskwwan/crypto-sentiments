@@ -9,8 +9,23 @@ $(document).ready(function() {
                 $(this).parent().addClass("active");
             }
         });
+
+        // navbar covers next element a bit, so add padding
+        $("body main").css(
+            "padding-top",
+            String(($("header .navbar").height() + $("header .navbar").innerHeight())/2) + "px"
+        );
     });
 
     // footer
-    $("footer").load("/static/html/footer.html");
+    $("footer").load("/static/html/footer.html", function() {
+        var github_logo = $("#github-logo");
+        github_logo.css("height", github_logo.parents(".navbar").innerHeight()/3);
+
+        // similarly, footer covers next element so add bottom padding
+        $("body main").css(
+            "padding-bottom",
+            String($("footer .navbar").innerHeight()) + "px"
+        )
+    });
 });

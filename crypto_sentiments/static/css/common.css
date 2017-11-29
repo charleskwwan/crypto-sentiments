@@ -1,4 +1,8 @@
-#github-logo {
-    width: auto;
-    height: 30px;
+html {
+    position: relative;
+}
+
+body > .container {
+    height: 100%;
+    padding-right: 15px;
 }
