@@ -5,6 +5,7 @@ function title(s) {
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+// create badge element based on sentiment
 function sent_text_elem(sentiment, text) {
     var badge_type = {
         positive: "badge-success",

@@ -1,17 +1,15 @@
 // crypto_sentiments/static/js/index.js
 
-var currencies = null;
-
 $(document).ready(function() {
-    // retrieve jinja currencies var from meta tag in html
-    currencies = $(this).find("#currencies-data").data()["currencies"];
-
     // set onclick listeners for each currency button
     var currency_text = $(this).find("#currency-text");
     var predict_text = $(this).find(".predict-text");
+
     $(this).find("#currency-btns label").each(function() {
         $(this).click(function() {
             var c = $(this).children("input").attr("id").replace("-btn", "");
+
+            // request price direction for currency from server
             $.get("/pricedir/" + c, function(data) {
                 currency_text.text(c);
                 predict_text.attr("id", "predict-" + data["direction"]);
@@ -24,7 +22,7 @@ $(document).ready(function() {
         });
     });
 
-    // github height
+    // github logo (inline) height
     var github_logo = $("#github-logo-inline");
     github_logo.css("height", github_logo.parents("p").css("line-height"));
 });

@@ -1,6 +1,7 @@
 # crypto_sentiments/views/visualizations.py
 
-from flask import Blueprint, render_template
+from flask import Blueprint
+from flask import render_template
 
 
 visualizations = Blueprint(
