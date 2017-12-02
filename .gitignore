@@ -5,6 +5,7 @@ __pycache__/
 
 # data files
 
+playground.*
 data/
 
 # C extensions
@@ -103,3 +104,5 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+.DS_Store

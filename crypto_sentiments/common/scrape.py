@@ -4,10 +4,12 @@ https://github.com/taspinar/twitterscraper
 """
 
 import re
+import csv 
 from urllib.parse import quote
 
 # can raise 'fake_useragent.errors.FakeUserAgentError', if heroku site not good
 import twitterscraper as ts
+
 
 
 def _flatten_and_join(l, prefix, joiner):
@@ -89,7 +91,7 @@ def query_tweets(query, limit=None):
     return ts.query_tweets(query, limit)
 
 
-def prune_tweet(s):
+def prune_tweet(tweet):
     """
     Prunes a tweet in the following ways:
         1. Replace urls with the term URL
@@ -101,8 +103,33 @@ def prune_tweet(s):
 
     Returns [str]: pruned tweet text
     """
-    s = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', 'URL', s)
-    s = re.sub(r'#(\w+)', r'\1', s)
-    s = re.sub(r'@(\w+)', 'USER', s)
+     # process the tweets
 
-    return s
+    #Convert to lower case
+    tweet = tweet.lower()
+    #Convert www.* or https?://* to URL
+    tweet = re.sub('((www\.[^\s]+)|(https?://[^\s]+))','URL',tweet)
+    #Convert @username to AT_USER
+    tweet = re.sub('@[^\s]+','AT_USER',tweet)
+    #Remove additional white spaces
+    tweet = re.sub('[\s]+', ' ', tweet)
+    #Replace #word with word
+    tweet = re.sub(r'#([^\s]+)', r'\1', tweet)
+    #trim
+    tweet = tweet.strip('\'"')
+    
+    return tweet
+
+
+def write_tweet(tweet): 
+    """
+    writes tweets handle, timestamp, and text to csv
+
+    Params:
+    s [obj]: tweet object
+
+    Returns [None]: 
+    """
+    csvFile = open('./crypto_sentiments/data/cryptocurrency.csv', 'a')
+    csvWriter = csv.writer(csvFile)
+    csvWriter.writerow([tweet.fullname, tweet.timestamp, tweet.text])
