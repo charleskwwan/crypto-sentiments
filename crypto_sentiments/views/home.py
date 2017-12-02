@@ -1,10 +1,16 @@
 # crypto_sentiments/views/home.py
 
-from flask import Blueprint, render_template
-from ..common.pricefinder import get_price
-from ..common.tweet_scraper import scrape
+import random # temp
 
-from datetime import date
+from crypto_sentiments.common.constants import CURRENCIES
+from crypto_sentiments.common.constants import DIRECTIONS # temp
+from crypto_sentiments.common.constants import SENTIMENTS # temp
+from crypto_sentiments.common.pricefinder import get_price
+from crypto_sentiments.common.tweet_scraper import scrape
+from flask import Blueprint
+from flask import jsonify
+from flask import render_template
+
 
 home = Blueprint(
     'home',
@@ -13,12 +19,31 @@ home = Blueprint(
     static_folder='static',
 )
 
+_DEFAULT_CURRENCY = 'bitcoin'
 
-@home.route('/')
+
+@home.route('/', methods=['GET'])
 def index():
+    """
+    Renders home page with following Jinja2 vars:
+    - currency: default currency on page
+    - direction: price direction of currency
+    - currencies: every supported currency (so html can render buttons for each)
+    """
+    return render_template(
+        'index.html',
+        currency=_DEFAULT_CURRENCY,
+        direction=random.sample(DIRECTIONS, 1)[0],
+        currencies=[c for c in CURRENCIES],
+    )
 
 
-	scrape("#bitcoin", 100, "2017-10-01")
-
-	# return str(get_price())
-	return "Home"
+@home.route('/pricedir/<string:currency>', methods=['GET'])
+def pricedir(currency):
+    """
+    API to allow clients to query the price direction for a specific currency
+    """
+    if currency in CURRENCIES:
+        return jsonify({'direction': random.sample(DIRECTIONS, 1)[0]})
+    else:
+        return jsonify({'error': 'Invalid currency'}), 400

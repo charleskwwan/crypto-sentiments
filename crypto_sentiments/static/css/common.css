@@ -1,0 +1,13 @@
+html {
+    position: relative;
+}
+
+body > .container {
+    height: 100%;
+    padding-right: 15px;
+}
+
+.page-title {
+    padding-top: 40px;
+    padding-botton:15px;
+}

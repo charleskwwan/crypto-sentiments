@@ -1,0 +1,28 @@
+#currency-text:first-letter {
+    text-transform: capitalize;
+}
+
+.predict-text {
+    padding-top: 50px;
+    padding-bottom: 50px;
+    text-align: center;
+}
+
+#predict-up {
+    color: #00ff00;
+}
+
+#predict-down{
+    color: #ff0000;
+}
+
+.btn-group-wrap {
+    text-align: center;
+}
+
+div.btn-group {
+    margin: 0 auto;
+    text-align: center;
+    width: inherit;
+    display: inline-block;
+}
