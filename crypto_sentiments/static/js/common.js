@@ -19,13 +19,14 @@ $(document).ready(function() {
 
     // footer
     $("footer").load("/static/html/footer.html", function() {
-        var github_logo = $("#github-logo");
-        github_logo.css("height", github_logo.parents(".navbar").innerHeight()/2);
-
         // similarly, footer covers next element so add bottom padding
         $("body main").css(
             "padding-bottom",
             String($("footer .navbar").outerHeight()) + "px"
         )
+
+        var github_logo = $("#github-logo");
+        console.log(github_logo.parents(".navbar").innerHeight());
+        github_logo.css("height", github_logo.parents(".navbar").innerHeight()/2);
     });
 });

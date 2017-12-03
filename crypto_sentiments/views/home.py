@@ -6,7 +6,6 @@ from crypto_sentiments.common.constants import CURRENCIES
 from crypto_sentiments.common.constants import DIRECTIONS # temp
 from crypto_sentiments.common.constants import SENTIMENTS # temp
 from crypto_sentiments.common.pricefinder import get_price
-from crypto_sentiments.common.tweet_scraper import scrape
 from flask import Blueprint
 from flask import jsonify
 from flask import render_template
