@@ -86,8 +86,11 @@ def twitter_query_string(
 def query_tweets(query, limit=None):
     """
     Wrapper over twitterscraper.query_tweets
+    Note: anecdotally, twitter has an internal limit of about 20 values per
+        field in the query string
     """
-    return ts.query_tweets(query, limit)
+    tweets = ts.query_tweets(query, limit)
+    return tweets
 
 
 def prune_tweet(tweet):

@@ -1,13 +1,28 @@
 # crypto_sentiments/common/sentiment_tracking.py
 
 import datetime
+from concurrent.futures import ThreadPoolExecutor
 
 from crypto_sentiments.common.constants import CURRENCIES
+from crypto_sentiments.common.dateutils import daterange
+from crypto_sentiments.common.dateutils import today
 from crypto_sentiments.common.sentiments.twitter_scrape import prune_tweet
 from crypto_sentiments.common.sentiments.twitter_scrape import query_tweets
 from crypto_sentiments.common.sentiments.twitter_scrape import twitter_query_string
 from crypto_sentiments.models import db
 from crypto_sentiments.models.models import CurrencySentiment
+
+
+_ACCOUNTS_TO_TRACK = [
+    'Skoylesy', 'jonmatonis', 'maxkeiser', 
+    'stacyherbert', 'KonradSGraf', 'tomjdalton', 
+    'ErikVoorhees', 'Falkvinge', 'Goldcore',
+    'BitcoinBytes', 'BitcoinEconomy', 'BitcoinMagazine',
+    'BitcoinMoney', 'BitcoinNews', 'BitcoinOz',
+    'jonmatonis', 'CNBC', 'CNNMoney',
+    'WSJ', 'BTCTN', 'TechCrunch',
+    'iamjosephyoung',
+]
 
 
 class SentimentTracker(object):
@@ -32,7 +47,7 @@ class SentimentTracker(object):
         - neu [str]: classifier's neutral sentiment tag
         """
         self._classifier = classifier
-        self._curr_date = min(self._today(), start_date)
+        self._curr_date = min(today(), start_date)
         self._SENTS = {
             pos: 1,
             neg: -1,
@@ -40,34 +55,25 @@ class SentimentTracker(object):
         }
         self._currencies = set(currencies)
 
-    @staticmethod
-    def _today():
-        today = datetime.date.today()
-        return datetime.datetime(today.year, today.month, today.day)
-
-    @staticmethod
-    def _daterange(start_date, end_date):
-        """
-        Generate dates from start to end, excluding end
-        """
-        if start_date <= end_date:
-            for n in range((end_date - start_date).days):
-                yield start_date + datetime.timedelta(n)
-        else:
-            SentimentTracker._daterange(end_date, start_date)
-
     def _scrape_tweets(self, currency, date, limit=2000):
         """
         Scrape tweets for a given currency on a specific date
         """
-        qs = twitter_query_string(
-            required=[currency],
-            hashtags=[currency],
-            from_accs=['CNBC', 'CNNMoney', 'WSJ', 'BTCTN', 'TechCrunch'], #temp
-            since=date,
-            until=(date + datetime.timedelta(days=1)), # between start of days
-        )
-        tweets = query_tweets(qs, limit)
+        tweets = []
+        for i in range(int(len(_ACCOUNTS_TO_TRACK)/15)+1): # chunk accs
+            start = i * 15
+            accounts = _ACCOUNTS_TO_TRACK[start:start+15]
+            if not accounts:
+                break
+            qs = twitter_query_string(
+                required=[currency],
+                hashtags=[currency],
+                from_accs=accounts, #temp
+                since=date,
+                until=(date + datetime.timedelta(days=1)), # between start of days
+            )
+            tweets.extend(query_tweets(qs, limit))
+
         return [prune_tweet(tweet.text) for tweet in tweets]
 
     def _aggregate_tweets_sentiment(self, tweets):
@@ -94,11 +100,18 @@ class SentimentTracker(object):
         """
         if until and until <= self._curr_date:
             return
-        today = self._today()
-        if not until or until > today:
-            until = today
+        if not until or until > today():
+            until = today()
 
-        for d in self._daterange(self._curr_date, until):
+        pool = ThreadPoolExecutor(max_workers=5)
+
+        csents = []
+        def calc_sentiment(csent, c, d):
+            tweets = self._scrape_tweets(c, d)
+            csent.sentiment = self._aggregate_tweets_sentiment(tweets)
+            csents.append(csent)
+
+        for d in daterange(self._curr_date, until):
             for c in self._currencies:
                 csent = CurrencySentiment.query.filter_by(
                     currency=c,
@@ -110,9 +123,11 @@ class SentimentTracker(object):
                 elif not csent:
                     csent = CurrencySentiment(currency=c, date=d)
 
-                tweets = self._scrape_tweets(c, d)
-                csent.sentiment = self._aggregate_tweets_sentiment(tweets)
-                db.session.add(csent)
+                pool.submit(calc_sentiment, csent, c, d)
+        pool.shutdown()
 
+        for csent in csents:
+            db.session.add(csent)
         db.session.commit()
+
         self._curr_date = until

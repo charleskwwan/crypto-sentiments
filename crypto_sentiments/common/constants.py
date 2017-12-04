@@ -1,9 +1,7 @@
 # crypto_sentiments/common/constants.py
 
-CURRENCIES ={
-    'bitcoin': 'BTC',
-    'ethereum': 'ETH',
-    'litecoin': 'LTC',
-}
+from crypto_sentiments.common.prices.pricefinder import COINS
+
+CURRENCIES = COINS
 SENTIMENTS = set(['positive', 'negative', 'neutral'])
 DIRECTIONS = set(['up', 'down'])

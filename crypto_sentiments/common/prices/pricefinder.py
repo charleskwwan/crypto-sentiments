@@ -6,17 +6,23 @@ Notes:
   and cache results if possible
 """
 
-import cryptocompare as cc
-
 from datetime import datetime as dt
 from datetime import timedelta
+from concurrent.futures import ThreadPoolExecutor
+
+import cryptocompare as cc
+from crypto_sentiments.common.dateutils import daterange
 
 
-COINS = set(['BTC', 'ETH', 'LTC'])
-CURRENCIES = set(['USD'])
+COINS = {
+    'bitcoin': 'BTC',
+    'ethereum': 'ETH',
+    'litecoin': 'LTC',
+}
+_CURRENCIES = set(['USD'])
 
 
-def get_price(coin = 'BTC', currency = 'USD', date=None):
+def get_price(coin='BTC', currency='USD', date=None):
     """
     Get price of cryptocurrency in terms of real currency on a specific day
 
@@ -37,18 +43,10 @@ def get_price(coin = 'BTC', currency = 'USD', date=None):
     return dct[coin][currency] if dct else None
 
 
-def _daterange(start, end):
-    """
-    Generator for dates between start and end inclusive
-    """
-    for n in range(int((end - start).days)+1):
-        yield start + timedelta(n)
-
-
 def get_price_in_range(coin, currency, start, end):
     """
     Gets the price of cryptocurrency in terms of real currency over a range of
-    dates, inclusive.
+    dates, exclusive.
 
     Params:
     coin [str]: cryptocurrency code
@@ -67,10 +65,14 @@ def get_price_in_range(coin, currency, start, end):
     )
     """
     prices = []
-    for dt in _daterange(start, end):
-        price = get_price(coin, currency, dt)
-        if price:
-            prices.append((price, dt))
-        else:
-            return None
+    pool = ThreadPoolExecutor(max_workers=5)
+
+    def record_price(dt):
+        price = get_price(coin, currency, dt) # can be 0, if coin didnt exist
+        prices.append((price, dt))
+
+    for dt in daterange(start, end):
+        pool.submit(record_price, dt)
+    pool.shutdown()
+
     return prices

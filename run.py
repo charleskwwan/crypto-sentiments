@@ -26,6 +26,16 @@ def parse_args():
         action='store_true',
         default=False,
     )
+    parser.add_argument(
+        '--dbinput',
+        help='Serialized database file; loads database from if provided',
+        default=None
+    )
+    parser.add_argument(
+        '--dboutput',
+        help='File to serialize database to',
+        default=None
+    )
 
     args = parser.parse_args()
     if args.config not in CONFIGS:
@@ -36,13 +46,14 @@ def parse_args():
 
 def main():
     args = parse_args()
-    initialize(CONFIGS[args.config], args.classifier_file)
+    initialize(CONFIGS[args.config], args.classifier_file, args.dbinput)
     try:
         print('### Running server...')
         app.run(use_reloader=False)
     finally:
+        print('### Shutting down...')
         if not args.dropafter:
-            shutdown()
+            shutdown(args.dboutput)
 
 if __name__ == '__main__':
     main()
