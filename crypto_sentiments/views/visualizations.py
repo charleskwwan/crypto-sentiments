@@ -2,6 +2,7 @@
 
 from flask import Blueprint
 from flask import render_template
+from crypto_sentiments.models.models import CurrencySentiment
 
 
 visualizations = Blueprint(
@@ -14,4 +15,8 @@ visualizations = Blueprint(
 
 @visualizations.route('/')
 def index():
+    csents = CurrencySentiment.query.all()
+    for cs in csents:
+        print(cs.currency, cs.date, cs.sentiment)
+        
     return render_template('visualizations.html')

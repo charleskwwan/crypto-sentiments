@@ -1,4 +1,4 @@
-# crypto_sentiments/common/sentiments.py
+# crypto_sentiments/common/sentiment_classify.py
 
 import argparse
 import csv
@@ -14,40 +14,6 @@ from nltk.classify import NaiveBayesClassifier
 from nltk.corpus import stopwords
 
 
-def load_tweets_from_csv(
-    fname,
-    sent_header,
-    text_header,
-    pos_sent='pos',
-    neg_sent='neg',
-):
-    """
-    Loads tweets from a csv file
-
-    Params:
-    - fname [str]: file name
-    - sent_header [str]: sentiment header
-    - text_header [str]: tweet text header
-    - pos_sent [str]: positive sentiment string in file
-    - neg_sent [str]: negative sentiment string in file
-
-    Returns [list[tuple[str, str]]]: list of tweets, each of which is a tuple of
-        a tweet and a sentiment
-    """
-    tweets = []
-    with open(fname, 'r') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            if row[sent_header] == pos_sent:
-                sentiment = 'pos'
-            elif row[sent_header] == neg_sent:
-                sentiment = 'neg'
-            else:
-                sentiment = None
-            tweets.append((row[text_header], sentiment))
-    return tweets
-
-
 class TweetClassifier(object):
     """
     Twitter Classifier built on top of nltk's Naive Bayes Classifier
@@ -60,7 +26,6 @@ class TweetClassifier(object):
         - percent [float]: percent of tweets to use, ranked by feature rareness
         """
         self.classifier = self._train(tweets, percent)
-
 
     @staticmethod
     def _filter(tweet, stops=stopwords.words('english')):
@@ -130,6 +95,7 @@ class TweetClassifier(object):
         """
         # reduce tweets down to top ones with rarest words based on percent
         tweets = [(self._filter(tweet), sent) for tweet, sent in tweets]
+        sents = set([sent for _, sent in tweets])
         words = Counter([w for tweet, _ in tweets for w in tweet.split(' ')])
         words = sorted(list(words.items()), key=lambda x: x[1], reverse=True)
         words = {
@@ -144,8 +110,16 @@ class TweetClassifier(object):
             ranked.append((score, (tweet, sent)))
         ranked.sort()
 
-        tweets = [p for score, p in ranked[:int(len(ranked)*percent)]]
-        del ranked, words # optimization
+        del words # optimization
+        sent_ranked = [
+            [p for score, p in ranked if p[1] == sent]
+            for sent in sents
+        ]
+
+        # divide evenly between number of sentiments
+        n_per_sent = int((len(ranked) * percent) / len(sents))
+        del ranked # optimization
+        tweets = [p for ps in sent_ranked for p in ps[:n_per_sent]]
 
         # train
         trainingset = [
@@ -166,8 +140,60 @@ class TweetClassifier(object):
         featureset = self._make_featureset(tweet)
         return self.classifier.classify(featureset)
 
+    def save(self, fname):
+        """
+        Pickle save to fname
+        """
+        module = TweetClassifier.__module__
+        with open(fname, 'wb+') as f:
+            pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
+        TweetClassifier.__module__ = module # restore
 
-def parse_args():
+    @staticmethod
+    def load(fname):
+        """
+        Load classifier from file, returns TweetClassifier obj
+        """
+        with open(fname, 'rb') as f:
+            obj = pickle.load(f)
+        return obj
+
+
+def load_tweets_from_csv(
+    fname,
+    sent_header,
+    text_header,
+    pos_sent='pos',
+    neg_sent='neg',
+):
+    """
+    Loads tweets from a csv file
+
+    Params:
+    - fname [str]: file name
+    - sent_header [str]: sentiment header
+    - text_header [str]: tweet text header
+    - pos_sent [str]: positive sentiment string in file
+    - neg_sent [str]: negative sentiment string in file
+
+    Returns [list[tuple[str, str]]]: list of tweets, each of which is a tuple of
+        a tweet and a sentiment
+    """
+    tweets = []
+    with open(fname, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row[sent_header] == pos_sent:
+                sentiment = 'pos'
+            elif row[sent_header] == neg_sent:
+                sentiment = 'neg'
+            else:
+                sentiment = None
+            tweets.append((row[text_header], sentiment))
+    return tweets
+
+
+def _parse_args():
     parser = argparse.ArgumentParser(description='Create tweet classifier')
     parser.add_argument(
         'input',
@@ -221,7 +247,7 @@ def parse_args():
 
 
 def main():
-    args = parse_args()
+    args = _parse_args()
     start_time = time.time()
     print('### Loading tweets from {}'.format(args.input))
     tweets = load_tweets_from_csv(
@@ -236,8 +262,7 @@ def main():
     tc = TweetClassifier(tweets, args.percent)
 
     print('### Serialization object to {}'.format(args.output))
-    with open(args.output, 'wb+') as f:
-        pickle.dump(tc, f, protocol=pickle.HIGHEST_PROTOCOL)
+    tc.save(args.output)
 
     print('### Completed after: {} minutes'.format(
         round((time.time() - start_time)/60, 2),

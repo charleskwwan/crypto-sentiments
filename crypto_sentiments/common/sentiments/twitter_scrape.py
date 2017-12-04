@@ -11,7 +11,6 @@ from urllib.parse import quote
 import twitterscraper as ts
 
 
-
 def _flatten_and_join(l, prefix, joiner):
     l = [prefix + w for w in re.split(r'\s', ' '.join(l)) if w != '']
     return joiner.join(l)
