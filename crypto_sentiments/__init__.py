@@ -13,7 +13,7 @@ from crypto_sentiments.common.sentiments.tracking import SentimentTracker
 from crypto_sentiments.models import create_db
 from crypto_sentiments.models import drop_db
 from crypto_sentiments.views.home import home
-from crypto_sentiments.views.predictions import predictions
+from crypto_sentiments.views.predictions import predictions_factory
 from crypto_sentiments.views.visualizations import visualizations
 
 
@@ -25,12 +25,8 @@ app = Flask(__name__)
 
 
 def initialize(conf, classifier_file):
-    # app
+    # config
     app.config.from_object(conf)
-
-    app.register_blueprint(home)
-    app.register_blueprint(predictions, url_prefix='/predict')
-    app.register_blueprint(visualizations, url_prefix='/viz')
 
     # db creation
     create_db(app)
@@ -39,11 +35,16 @@ def initialize(conf, classifier_file):
     print('### Loading classifier...')
     classifier = TweetClassifier.load(classifier_file)
 
+    # routes
+    app.register_blueprint(home)
+    predictions = predictions_factory(classifier)
+    app.register_blueprint(predictions, url_prefix='/predict')
+    app.register_blueprint(visualizations, url_prefix='/viz')
+
     # track sentiment up to present
     sent_tracker = SentimentTracker(
         classifier,
         _TRACK_SENTIMENT_FROM,
-        'pos', 'neg', 'neu',
     )
     print('### Tracking sentiments...')
     sent_tracker.track() # until today, updates db

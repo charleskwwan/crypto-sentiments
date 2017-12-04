@@ -184,9 +184,9 @@ def load_tweets_from_csv(
         reader = csv.DictReader(f)
         for row in reader:
             if row[sent_header] == pos_sent:
-                sentiment = 'pos'
+                sentiment = 'positive'
             elif row[sent_header] == neg_sent:
-                sentiment = 'neg'
+                sentiment = 'negative'
             else:
                 sentiment = None
             tweets.append((row[text_header], sentiment))

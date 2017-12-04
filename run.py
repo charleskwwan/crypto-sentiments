@@ -23,7 +23,7 @@ def parse_args():
     parser.add_argument(
         '--dropafter',
         help='Drop database tables after termination',
-        type=bool,
+        action='store_true',
         default=False,
     )
 
