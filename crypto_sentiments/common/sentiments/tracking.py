@@ -1,6 +1,7 @@
 # crypto_sentiments/common/sentiment_tracking.py
 
 import datetime
+import queue
 from concurrent.futures import ThreadPoolExecutor
 
 from crypto_sentiments.common.constants import CURRENCIES
@@ -106,6 +107,10 @@ class SentimentTracker(object):
             - default/highest possible is today
             - until must be greater than curr_date
         - override [bool]: if true, overrides existing entries in database
+
+        Notes:
+        - Modified to use reader-writer on tweets because classify doesnt seem
+          to work on non-main threads for TweetNeuralNetwork
         """
         if until and until <= self._curr_date:
             return
@@ -114,7 +119,7 @@ class SentimentTracker(object):
 
         pool = ThreadPoolExecutor(max_workers=10)
 
-        csents = []
+        tweetsq = queue.Queue()
         def calc_sentiment(csent, c, d):
             tweets = self._scrape_tweets(c, d)
             print('# Tracking sentiment on {} for {}: found {} tweets'.format(
@@ -122,9 +127,11 @@ class SentimentTracker(object):
                 c,
                 len(tweets),
             ))
-            csent.sentiment = self._aggregate_tweets_sentiment(tweets)
-            csents.append(csent)
 
+            tweetsq.put((csent, tweets))
+
+        # writer to pool
+        ntasks = 0
         for d in daterange(self._curr_date, until):
             for c in self._currencies:
                 csent = CurrencySentiment.query.filter_by(
@@ -138,10 +145,20 @@ class SentimentTracker(object):
                     csent = CurrencySentiment(currency=c, date=d)
 
                 pool.submit(calc_sentiment, csent, c, d)
-        pool.shutdown()
+                ntasks += 1
 
-        for csent in csents:
+        # single reader from pool
+        while ntasks > 0:
+            try:
+                p = tweetsq.get(block=True)
+            except queue.Empty:
+                continue
+            csent, tweets = p
+            csent.sentiment = self._aggregate_tweets_sentiment(tweets)
             db.session.add(csent)
+            ntasks -= 1
+
         db.session.commit()
+        pool.shutdown()
 
         self._curr_date = until

@@ -13,6 +13,7 @@ from crypto_sentiments.common.dateutils import today
 from crypto_sentiments.common.prices.tracking import PriceTracker
 from crypto_sentiments.common.sentiments.classify import TweetClassifier
 from crypto_sentiments.common.sentiments.tracking import SentimentTracker
+from crypto_sentiments.common.sentiments.nn import TweetNeuralNetwork
 from crypto_sentiments.common.trends import feature_on
 from crypto_sentiments.common.trends import trainingset_between
 from crypto_sentiments.common.trends.predict import TrendPredictor
@@ -42,11 +43,19 @@ def initialize(conf, classifier_file, db_input=None):
 
     # classifier
     print('### Loading classifier...')
-    classifier = TweetClassifier.load(classifier_file)
+    classifier = None
+    if type(classifier_file) == str:
+        classifier = TweetClassifier.load(classifier_file)
+    elif type(classifier_file) == tuple:
+        fclss, fwgts = classifier_file
+        classifier = TweetNeuralNetwork()
+        classifier.load(fclss, fwgts)
+    else:
+        raise Exception('Invalid classifier files')
 
     # track sentiment up to present
-    sent_tracker = SentimentTracker(classifier, _TRACK_FROM)
     print('### Tracking sentiments...')
+    sent_tracker = SentimentTracker(classifier, _TRACK_FROM)
     sent_tracker.track(override=False) # until today, updates db
     # schedule.every().day.at("1:00").do(sent_tracker.track) # update every day
 

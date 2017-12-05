@@ -1,6 +1,7 @@
 # run.py
 
 import argparse
+import re
 
 from config import CONFIGS
 from crypto_sentiments import app
@@ -40,6 +41,8 @@ def parse_args():
     args = parser.parse_args()
     if args.config not in CONFIGS:
         parser.error('config must be dev, stage, prod, or test')
+    if re.match(r'[^,]+,[^,]+', args.classifier_file):
+        args.classifier_file = tuple(args.classifier_file.split(','))
 
     return args
 

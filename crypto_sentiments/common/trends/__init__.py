@@ -31,7 +31,13 @@ def feature_on(end, currency, window_size=DEFAULT_WINDOW_SIZE):
     if len(csents) != window_size:
         raise Exception('Not enough data in database')
 
-    sents = [csent.sentiment for csent in csents]
+    try:
+        sents = [csent.sentiment for csent in csents]
+    except AttributeError:
+        print(end, currency)
+        print(csents)
+        print(csents[0].date, csents[1].date)
+        raise Exception
     return sum(sents) / len(sents)
 
 

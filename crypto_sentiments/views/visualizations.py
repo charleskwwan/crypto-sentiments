@@ -31,7 +31,7 @@ def index():
     }
     pts = [
         (date, prices[date], sents[date])
-        for date in prices
+        for date in sents
     ]
 
     start = random.randint(0, len(pts)-101)

@@ -103,7 +103,6 @@ def load_tables(fname):
             ).first()
 
             if existing: # avoid creating duplicate entries
-                print('dup found')
                 existing.copy(entry)
                 entry = existing
 
