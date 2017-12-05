@@ -8,14 +8,19 @@ import schedule
 from flask import Flask
 from flask_cors import CORS
 from flask_compress import Compress
+from crypto_sentiments.common.constants import CURRENCIES
+from crypto_sentiments.common.dateutils import today
 from crypto_sentiments.common.prices.tracking import PriceTracker
 from crypto_sentiments.common.sentiments.classify import TweetClassifier
 from crypto_sentiments.common.sentiments.tracking import SentimentTracker
+from crypto_sentiments.common.trends import feature_on
+from crypto_sentiments.common.trends import trainingset_between
+from crypto_sentiments.common.trends.predict import TrendPredictor
 from crypto_sentiments.models import create_db
 from crypto_sentiments.models import drop_db
 from crypto_sentiments.models.models import load_tables
 from crypto_sentiments.models.models import save_tables
-from crypto_sentiments.views.home import home
+from crypto_sentiments.views.home import home_factory
 from crypto_sentiments.views.predictions import predictions_factory
 from crypto_sentiments.views.visualizations import visualizations
 
@@ -39,12 +44,6 @@ def initialize(conf, classifier_file, db_input=None):
     print('### Loading classifier...')
     classifier = TweetClassifier.load(classifier_file)
 
-    # routes
-    app.register_blueprint(home)
-    predictions = predictions_factory(classifier)
-    app.register_blueprint(predictions, url_prefix='/predict')
-    app.register_blueprint(visualizations, url_prefix='/viz')
-
     # track sentiment up to present
     sent_tracker = SentimentTracker(classifier, _TRACK_FROM)
     print('### Tracking sentiments...')
@@ -56,6 +55,22 @@ def initialize(conf, classifier_file, db_input=None):
     print('### Tracking prices...')
     price_tracker.track(override=False)
     # schedule.every().day.at("1:00").do(price_tracker.track) # update every day
+
+    # predictor
+    yesterday = today() - datetime.timedelta(days=1)
+    pred_start = datetime.datetime(2017, 1, 1)
+    predictors = {}
+    print('### Creating predictors...')
+    for c in CURRENCIES.keys():
+        trainingset = trainingset_between(pred_start, yesterday, c)
+        predictors[c] = TrendPredictor(trainingset)
+
+    # routes
+    home = home_factory(predictors)
+    app.register_blueprint(home)
+    predictions = predictions_factory(classifier)
+    app.register_blueprint(predictions, url_prefix='/predict')
+    app.register_blueprint(visualizations, url_prefix='/viz')
 
     # optimizations
     CORS(app)

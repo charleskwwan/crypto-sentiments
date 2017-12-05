@@ -18,6 +18,11 @@ class CurrencySentiment(db.Model):
     updated_at = db.Column(db.DateTime(timezone=True), server_default=func.now(),
                            onupdate=func.now())
 
+    def copy(self, other):
+        self.currency = other.currency
+        self.date = other.date
+        self.sentiment = other.sentiment
+
     def serialize(self):
         return {
             'currency': self.currency,
@@ -42,6 +47,11 @@ class CurrencyPrice(db.Model):
     date = db.Column(db.DateTime(timezone=True), nullable=False)
     price = db.Column(db.Float, nullable=True) # no price data available then
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+
+    def copy(self, other):
+        self.currency = other.currency
+        self.date = other.date
+        self.price = other.price
 
     def serialize(self):
         return {
@@ -87,5 +97,15 @@ def load_tables(fname):
         clss = _MODELS[k]
         for serialized in v:
             entry = clss.deserialize(serialized)
+            existing = clss.query.filter_by(
+                currency=entry.currency,
+                date=entry.date
+            ).first()
+
+            if existing: # avoid creating duplicate entries
+                print('dup found')
+                existing.copy(entry)
+                entry = existing
+
             db.session.add(entry)
     db.session.commit()

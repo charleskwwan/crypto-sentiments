@@ -133,7 +133,7 @@ class SentimentTracker(object):
                 ).first()
 
                 if not override and csent:
-                    return
+                    break
                 elif not csent:
                     csent = CurrencySentiment(currency=c, date=d)
 
