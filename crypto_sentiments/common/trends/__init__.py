@@ -8,6 +8,7 @@ from crypto_sentiments.models.models import CurrencySentiment
 
 
 DEFAULT_WINDOW_SIZE = 3
+DIRECTIONS = set(['up', 'down', 'same'])
 
 
 def feature_on(end, currency, window_size=DEFAULT_WINDOW_SIZE):

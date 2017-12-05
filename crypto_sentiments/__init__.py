@@ -25,7 +25,7 @@ from crypto_sentiments.views.predictions import predictions_factory
 from crypto_sentiments.views.visualizations import visualizations
 
 
-_TRACK_FROM = datetime.datetime(2016, 1, 1)
+_TRACK_FROM = datetime.datetime(2015, 1, 1)
 
 
 app = Flask(__name__)
@@ -58,11 +58,10 @@ def initialize(conf, classifier_file, db_input=None):
 
     # predictor
     yesterday = today() - datetime.timedelta(days=1)
-    pred_start = datetime.datetime(2017, 1, 1)
     predictors = {}
     print('### Creating predictors...')
     for c in CURRENCIES.keys():
-        trainingset = trainingset_between(pred_start, yesterday, c)
+        trainingset = trainingset_between(_TRACK_FROM, yesterday, c)
         predictors[c] = TrendPredictor(trainingset)
 
     # routes

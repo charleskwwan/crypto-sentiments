@@ -11,12 +11,26 @@ from flask import render_template
 
 
 _DEFAULT_CURRENCY = 'bitcoin'
+_TODAYS_DIRECTION = {
+    'bitcoin': None,
+    'ethereum': None,
+    'litecoin': None,
+}
 
 
 def _get_direction(currency, predictors):
-    predictor = predictors[currency]
-    feature = feature_on(today(), currency)
-    return predictor.predict(feature)
+    """
+    Gets direction of a currency for the day
+    Uses _TODAYS_DIRECTION to cache
+    """
+    p = _TODAYS_DIRECTION[currency] # p = direction, last_updated
+    if not p or p[1] != today():
+        predictor = predictors[currency]
+        feature = feature_on(today(), currency)
+        direction = predictor.predict(feature)
+        _TODAYS_DIRECTION[currency] = direction, today()
+    direction = _TODAYS_DIRECTION[currency][0]
+    return direction
 
 
 def home_factory(predictors):

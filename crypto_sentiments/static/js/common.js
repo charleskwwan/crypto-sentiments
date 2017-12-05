@@ -26,7 +26,6 @@ $(document).ready(function() {
         )
 
         var github_logo = $("#github-logo");
-        console.log(github_logo.parents(".navbar").innerHeight());
         github_logo.css("height", github_logo.parents(".navbar").innerHeight()/2);
     });
 });
