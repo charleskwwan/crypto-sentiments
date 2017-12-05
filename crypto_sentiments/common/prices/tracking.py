@@ -1,10 +1,12 @@
 # crypto_sentiments/common/prices/tracking.py
 
 import datetime
+from concurrent.futures import ThreadPoolExecutor
 
 from crypto_sentiments.common.constants import CURRENCIES # supported
+from crypto_sentiments.common.dateutils import daterange
 from crypto_sentiments.common.dateutils import today
-from crypto_sentiments.common.prices.pricefinder import get_price_in_range
+from crypto_sentiments.common.prices.pricefinder import get_price
 from crypto_sentiments.models import db
 from crypto_sentiments.models.models import CurrencyPrice
 
@@ -42,11 +44,17 @@ class PriceTracker(object):
         if not until or until > today():
             until = today()
 
-        for c in self._currencies:
-            code = CURRENCIES[c]
-            prices = get_price_in_range(code, 'USD', self._curr_date, until)
+        pool = ThreadPoolExecutor(max_workers=5)
 
-            for price, d in prices:
+        cprices = []
+        def record_price(cprice, c, d):
+            price = get_price(CURRENCIES[c], 'USD', d)
+            print('# Tracking price on {} for {}'.format(d.strftime('%Y-%m-%d'), c))
+            cprice.price = price
+            cprices.append(cprice)
+
+        for d in daterange(self._curr_date, until):
+            for c in self._currencies:
                 cprice = CurrencyPrice.query.filter_by(
                     currency=c,
                     date=d,
@@ -57,7 +65,11 @@ class PriceTracker(object):
                 elif not cprice:
                     cprice = CurrencyPrice(currency=c, date=d)
 
-                cprice.price = price
-                db.session.add(cprice)
+                pool.submit(record_price, cprice, c, d)
+        pool.shutdown()
 
+        for cprice in cprices:
+            db.session.add(cprice)
         db.session.commit()
+
+        self._curr_date = until

@@ -28,6 +28,7 @@ def twitter_query_string(
     near=None,
     since=None,
     until=None,
+    verified=False
 ):
     """
     Creates a twitter query string identical to that used in
@@ -45,6 +46,7 @@ def twitter_query_string(
     near [tuple(str, float)]: location string and radius distance in km
     since [datetime]: minimum year, month, day
     until [datetime]: maximum year, month, day
+    verified [boolean]: only get tweets from verified users
 
     Returns [str]: twitter query as URL string
     """    
@@ -79,6 +81,9 @@ def twitter_query_string(
             until.month,
             until.day,
         ) + ' '
+
+    if verified:
+        query_str += 'filter:verified '
 
     return quote(' '.join([w for w in re.split(r'\s', query_str) if w != '']))
 

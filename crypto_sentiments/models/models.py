@@ -30,7 +30,7 @@ class CurrencySentiment(db.Model):
         return cls(
             currency=serialized['currency'],
             date=datetime.datetime.strptime(serialized['date'], '%Y-%m-%d'),
-            sentiment=float(erialized['sentiment']),
+            sentiment=float(serialized['sentiment']),
         )
 
 
@@ -74,7 +74,7 @@ def save_tables(fname):
     """
     frozen = jsonpickle.encode({
         k : [entry.serialize() for entry in v.query.all()]
-        for k, v in _MODELS
+        for k, v in _MODELS.items()
     })
     with open(fname, 'w+') as f:
         f.write(frozen)
@@ -83,7 +83,7 @@ def save_tables(fname):
 def load_tables(fname):
     with open(fname, 'r') as f:
         raw = f.read()
-    for k, v in jsonpickle.decode(raw):
+    for k, v in jsonpickle.decode(raw).items():
         clss = _MODELS[k]
         for serialized in v:
             entry = clss.deserialize(serialized)

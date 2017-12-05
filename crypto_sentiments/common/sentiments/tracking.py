@@ -13,15 +13,12 @@ from crypto_sentiments.models import db
 from crypto_sentiments.models.models import CurrencySentiment
 
 
-_ACCOUNTS_TO_TRACK = [
+_UNVERIFIED_ACCS = [
     'Skoylesy', 'jonmatonis', 'maxkeiser', 
-    'stacyherbert', 'KonradSGraf', 'tomjdalton', 
-    'ErikVoorhees', 'Falkvinge', 'Goldcore',
-    'BitcoinBytes', 'BitcoinEconomy', 'BitcoinMagazine',
-    'BitcoinMoney', 'BitcoinNews', 'BitcoinOz',
-    'jonmatonis', 'CNBC', 'CNNMoney',
-    'WSJ', 'BTCTN', 'TechCrunch',
-    'iamjosephyoung',
+    'stacyherbert', 'KonradSGraf', 'drwasho',
+    'Goldcore', 'Cointelegraph', 'NickSzabo4',
+    'jonmatonis', 'iamjosephyoung', 'CryptoCoinsNews',
+    'CryptoBoomNews', 'CryptoCoiners', 'altcointoday',
 ]
 
 
@@ -55,24 +52,36 @@ class SentimentTracker(object):
         }
         self._currencies = set(currencies)
 
-    def _scrape_tweets(self, currency, date, limit=2000):
+    def _scrape_tweets(self, currency, date, limit=1000):
         """
         Scrape tweets for a given currency on a specific date
         """
         tweets = []
-        for i in range(int(len(_ACCOUNTS_TO_TRACK)/15)+1): # chunk accs
+        since, until = date, date + datetime.timedelta(days=1)
+
+        # unverified accounts
+        for i in range(int(len(_UNVERIFIED_ACCS)/15)+1): # chunk accs
             start = i * 15
-            accounts = _ACCOUNTS_TO_TRACK[start:start+15]
+            accounts = _UNVERIFIED_ACCS[start:start+15]
             if not accounts:
                 break
             qs = twitter_query_string(
                 required=[currency],
-                hashtags=[currency],
                 from_accs=accounts, #temp
-                since=date,
-                until=(date + datetime.timedelta(days=1)), # between start of days
+                since=since,
+                until=until, # between start of days
+                verified=False,
             )
             tweets.extend(query_tweets(qs, limit))
+
+        # verified accounts
+        qs = twitter_query_string(
+            required=[currency],
+            since=since,
+            until=until,
+            verified=True,
+        )
+        tweets.extend(query_tweets(qs, limit))
 
         return [prune_tweet(tweet.text) for tweet in tweets]
 
@@ -103,11 +112,16 @@ class SentimentTracker(object):
         if not until or until > today():
             until = today()
 
-        pool = ThreadPoolExecutor(max_workers=5)
+        pool = ThreadPoolExecutor(max_workers=10)
 
         csents = []
         def calc_sentiment(csent, c, d):
             tweets = self._scrape_tweets(c, d)
+            print('# Tracking sentiment on {} for {}: found {} tweets'.format(
+                d.strftime('%Y-%m-%d'), 
+                c,
+                len(tweets),
+            ))
             csent.sentiment = self._aggregate_tweets_sentiment(tweets)
             csents.append(csent)
 
@@ -119,7 +133,7 @@ class SentimentTracker(object):
                 ).first()
 
                 if not override and csent:
-                    continue
+                    return
                 elif not csent:
                     csent = CurrencySentiment(currency=c, date=d)
 

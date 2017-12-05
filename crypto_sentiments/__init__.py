@@ -20,7 +20,7 @@ from crypto_sentiments.views.predictions import predictions_factory
 from crypto_sentiments.views.visualizations import visualizations
 
 
-_TRACK_FROM = datetime.datetime(2015, 1, 1)
+_TRACK_FROM = datetime.datetime(2016, 1, 1)
 
 
 app = Flask(__name__)
