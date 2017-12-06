@@ -20,7 +20,8 @@ visualizations = Blueprint(
 @visualizations.route('/')
 def index():
     # should be same length
-    currency = random.choice(list(CURRENCIES.keys()))
+    # currency = random.choice(list(CURRENCIES.keys()))
+    currency = 'bitcoin'
     prices = {
         p.date: p.price
         for p in CurrencyPrice.query.filter_by(currency=currency)
@@ -29,10 +30,10 @@ def index():
         s.date: s.sentiment
         for s in CurrencySentiment.query.filter_by(currency=currency)
     }
-    pts = [
+    pts = sorted([
         (date, prices[date], sents[date])
         for date in sents
-    ]
+    ], key=lambda t: t[0])
 
     start = random.randint(0, len(pts)-101)
     return render_template(

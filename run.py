@@ -22,6 +22,17 @@ def parse_args():
         default='prod',
     )
     parser.add_argument(
+        '--ip',
+        help='App IP',
+        default='127.0.0.1',
+    )
+    parser.add_argument(
+        '--port',
+        help='App Port',
+        type=int,
+        default=5000,
+    )
+    parser.add_argument(
         '--dropafter',
         help='Drop database tables after termination',
         action='store_true',
@@ -52,7 +63,7 @@ def main():
     initialize(CONFIGS[args.config], args.classifier_file, args.dbinput)
     try:
         print('### Running server...')
-        app.run(use_reloader=False)
+        app.run(host=args.ip, use_reloader=False)
     finally:
         print('### Shutting down...')
         if not args.dropafter:
