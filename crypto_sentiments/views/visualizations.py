@@ -21,8 +21,7 @@ visualizations = Blueprint(
 @visualizations.route('/')
 def index():
     # should be same length
-    # currency = random.choice(list(CURRENCIES.keys()))
-    currency = 'bitcoin'
+    currency = random.choice(list(CURRENCIES.keys()))
     prices = {
         p.date: p.price
         for p in CurrencyPrice.query.filter_by(currency=currency)
@@ -45,7 +44,7 @@ def index():
 
 @visualizations.route('/data', methods=['GET'])
 def get_data(): 
-    currency = 'bitcoin'
+    currency = random.choice(list(CURRENCIES.keys()))
     prices = {
         p.date: p.price
         for p in CurrencyPrice.query.filter_by(currency=currency)
