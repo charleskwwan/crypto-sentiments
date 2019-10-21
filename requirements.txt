@@ -24,7 +24,7 @@ lxml==4.1.1
 Markdown==2.6.9
 MarkupSafe==1.0
 matplotlib==2.1.0
-nltk==3.2.5
+nltk==3.4.5
 numpy==1.13.3
 pandas==0.21.0
 pkg-resources==0.0.0
