@@ -11,7 +11,7 @@ enum34==1.1.6
 fake-useragent==0.1.8
 Flask==0.12.2
 Flask-Compress==1.4.0
-Flask-Cors==3.0.3
+Flask-Cors==3.0.9
 Flask-SQLAlchemy==2.3.2
 h5py==2.7.1
 html5lib==0.9999999
